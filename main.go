@@ -13,7 +13,7 @@ import (
 	"github.com/multiformats/go-multiaddr"
 )
 
-func main() {
+func basic() {
 	ctx := context.Background()
 
 	node, err := libp2p.New(
@@ -75,4 +75,9 @@ func main() {
 		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 		<-ch
 	}
+}
+
+func main() {
+	// basic()
+	testPubSub()
 }
