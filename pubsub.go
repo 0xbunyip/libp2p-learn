@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
+	pubsub "github.com/0xbunyip/libp2p-learn/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/peer"
-	pubsub "github.com/libp2p/go-libp2p-pubsub"
 )
 
 func testPubSub() {
@@ -83,7 +84,7 @@ func subscribe(hosts []host.Host) ([]*pubsub.PubSub, error) {
 	topic := "art"
 	ps := []*pubsub.PubSub{}
 	for i, h := range hosts {
-		p, err := pubsub.NewFloodSub(ctx, h)
+		p, err := pubsub.NewGossipSub(ctx, h)
 		if err != nil {
 			return nil, err
 		}
@@ -131,11 +132,12 @@ func connectHosts(hosts []host.Host) error {
 }
 
 func publish(ps []*pubsub.PubSub, hosts []host.Host) error {
+	time.Sleep(1 * time.Second)
 	log.Println("Publishing hosts")
 	m := 3
 	for i := 0; i < m; i++ {
 		log.Println("Publish ...")
-		if err := ps[0].Publish("art", []byte("123123123")); err != nil {
+		if err := ps[0].Publish("art", []byte("abc"+strconv.Itoa(i))); err != nil {
 			log.Println(err)
 		}
 		time.Sleep(3 * time.Second)
