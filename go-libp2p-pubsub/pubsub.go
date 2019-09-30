@@ -152,6 +152,7 @@ type Option func(*PubSub) error
 
 // NewPubSub returns a new PubSub management object.
 func NewPubSub(ctx context.Context, h host.Host, rt PubSubRouter, opts ...Option) (*PubSub, error) {
+	fmt.Println("In NewPubSub")
 	ps := &PubSub{
 		host:          h,
 		ctx:           ctx,
@@ -199,6 +200,7 @@ func NewPubSub(ctx context.Context, h host.Host, rt PubSubRouter, opts ...Option
 	for _, id := range rt.Protocols() {
 		h.SetStreamHandler(id, ps.handleNewStream)
 	}
+	fmt.Println("Register PubSubNotif")
 	h.Network().Notify((*PubSubNotif)(ps))
 
 	ps.val.Start(ps)
@@ -276,6 +278,7 @@ func (p *PubSub) processLoop(ctx context.Context) {
 	for {
 		select {
 		case pid := <-p.newPeers:
+			fmt.Println("<-p.newPeers", p.host.ID(), pid)
 			if _, ok := p.peers[pid]; ok {
 				log.Warning("already have connection to peer: ", pid)
 				continue
@@ -292,6 +295,7 @@ func (p *PubSub) processLoop(ctx context.Context) {
 			p.peers[pid] = messages
 
 		case s := <-p.newPeerStream:
+			fmt.Println("<-p.newPeerStream")
 			pid := s.Conn().RemotePeer()
 
 			ch, ok := p.peers[pid]
@@ -311,9 +315,11 @@ func (p *PubSub) processLoop(ctx context.Context) {
 			p.rt.AddPeer(pid, s.Protocol())
 
 		case pid := <-p.newPeerError:
+			fmt.Println("<-p.newPeerError")
 			delete(p.peers, pid)
 
 		case pid := <-p.peerDead:
+			fmt.Println("<-p.peerDead")
 			ch, ok := p.peers[pid]
 			if !ok {
 				continue
@@ -343,16 +349,20 @@ func (p *PubSub) processLoop(ctx context.Context) {
 			p.rt.RemovePeer(pid)
 
 		case treq := <-p.getTopics:
+			fmt.Println("<-p.getTopics")
 			var out []string
 			for t := range p.myTopics {
 				out = append(out, t)
 			}
 			treq.resp <- out
 		case sub := <-p.cancelCh:
+			fmt.Println("<-p.cancelCh")
 			p.handleRemoveSubscription(sub)
 		case sub := <-p.addSub:
+			fmt.Println("<-p.addSub")
 			p.handleAddSubscription(sub)
 		case preq := <-p.getPeers:
+			fmt.Println("<-p.getPeers")
 			tmap, ok := p.topics[preq.topic]
 			if preq.topic != "" && !ok {
 				preq.resp <- nil
@@ -370,24 +380,31 @@ func (p *PubSub) processLoop(ctx context.Context) {
 			}
 			preq.resp <- peers
 		case rpc := <-p.incoming:
+			fmt.Println("<-p.incoming")
 			p.handleIncomingRPC(rpc)
 
 		case msg := <-p.publish:
+			fmt.Println("<-p.publish")
 			p.pushMsg(p.host.ID(), msg)
 
 		case req := <-p.sendMsg:
+			fmt.Println("<-p.sendMsg")
 			p.publishMessage(req.from, req.msg.Message)
 
 		case req := <-p.addVal:
+			fmt.Println("<-p.addVal")
 			p.val.AddValidator(req)
 
 		case req := <-p.rmVal:
+			fmt.Println("<-p.rmVal")
 			p.val.RemoveValidator(req)
 
 		case thunk := <-p.eval:
+			fmt.Println("<-p.eval")
 			thunk()
 
 		case pid := <-p.blacklistPeer:
+			fmt.Println("<-p.blacklistPeer")
 			log.Infof("Blacklisting peer %s", pid)
 			p.blacklist.Add(pid)
 
@@ -405,6 +422,7 @@ func (p *PubSub) processLoop(ctx context.Context) {
 			}
 
 		case <-ctx.Done():
+			fmt.Println("<-ctx.Done()")
 			log.Info("pubsub processloop shutting down")
 			return
 		}

@@ -14,7 +14,7 @@ import (
 )
 
 func testPubSub() {
-	n := 3
+	n := 2
 	hosts, err := createHosts(n)
 	if err != nil {
 		log.Println(err)
@@ -31,13 +31,18 @@ func testPubSub() {
 		}
 	}()
 
-	ps, err := subscribe(hosts)
+	ps, err := createPubSubs(hosts) // Must create pubsub before connecting hosts
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
 	if err := connectHosts(hosts); err != nil {
+		log.Println(err)
+		return
+	}
+
+	if err = subscribe(ps); err != nil {
 		log.Println(err)
 		return
 	}
@@ -77,32 +82,38 @@ func createHosts(n int) ([]host.Host, error) {
 	return hosts, nil
 }
 
-func subscribe(hosts []host.Host) ([]*pubsub.PubSub, error) {
-	log.Println("Subscribing hosts")
-	// Subscribe
-	ctx := context.Background()
-	topic := "art"
+func createPubSubs(hosts []host.Host) ([]*pubsub.PubSub, error) {
 	ps := []*pubsub.PubSub{}
-	for i, h := range hosts {
-		p, err := pubsub.NewGossipSub(ctx, h)
+	ctx := context.Background()
+	for _, h := range hosts {
+		// p, err := pubsub.NewGossipSub(ctx, h)
+		p, err := pubsub.NewFloodSub(ctx, h)
 		if err != nil {
 			return nil, err
 		}
 		ps = append(ps, p)
+	}
+	return ps, nil
+}
+
+func subscribe(ps []*pubsub.PubSub) error {
+	log.Println("Subscribing hosts")
+	topic := "art"
+	for i, p := range ps {
 		// if i == 1 {
 		// 	continue
 		// }
 
 		sub, err := p.Subscribe(topic)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		go processSubscriptionMessage(i, h, sub)
+		go processSubscriptionMessage(i, sub)
 	}
-	return ps, nil
+	return nil
 }
 
-func processSubscriptionMessage(i int, h host.Host, sub *pubsub.Subscription) {
+func processSubscriptionMessage(i int, sub *pubsub.Subscription) {
 	log.Printf("host[%d] processing message\n", i)
 	ctx := context.Background()
 	for {
@@ -124,6 +135,7 @@ func connectHosts(hosts []host.Host) error {
 		id := hosts[i-1].ID()
 		mas := hosts[i-1].Addrs()
 		addrInfo := peer.AddrInfo{id, mas}
+		// fmt.Println(i, id, mas, addrInfo)
 		if err := hosts[i].Connect(ctx, addrInfo); err != nil {
 			return err
 		}

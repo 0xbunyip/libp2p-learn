@@ -96,6 +96,7 @@ func (gs *GossipSubRouter) RemovePeer(p peer.ID) {
 
 func (gs *GossipSubRouter) HandleRPC(rpc *RPC) {
 	ctl := rpc.GetControl()
+	// fmt.Println(gs.p.host.ID(), "HandleRPC", ctl)
 	if ctl == nil {
 		return
 	}
@@ -105,12 +106,12 @@ func (gs *GossipSubRouter) HandleRPC(rpc *RPC) {
 	prune := gs.handleGraft(rpc.from, ctl)
 	gs.handlePrune(rpc.from, ctl)
 
+	// fmt.Printf("%v sendRPC to %v\n", gs.p.host.ID(), rpc.from)
 	if len(iwant) == 0 && len(ihave) == 0 && len(prune) == 0 {
 		return
 	}
 
 	out := rpcWithControl(ihave, nil, iwant, nil, prune)
-	fmt.Printf("%v sendRPC to %v\n", gs.p.host.ID(), rpc.from)
 	gs.sendRPC(rpc.from, out)
 }
 
