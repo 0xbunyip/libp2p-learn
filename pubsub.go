@@ -14,7 +14,7 @@ import (
 )
 
 func testPubSub() {
-	n := 2
+	n := 3
 	hosts, err := createHosts(n)
 	if err != nil {
 		log.Println(err)
@@ -122,7 +122,7 @@ func processSubscriptionMessage(i int, sub *pubsub.Subscription) {
 			log.Println(err)
 			continue
 		}
-		log.Printf("host[%d] received msg %s %v\n", i, msg.Data, msg.TopicIDs)
+		log.Printf("host[%d] received msg %s %v %v %v\n", i, msg.Data, msg.TopicIDs, msg.GetFrom(), msg.Seqno)
 	}
 }
 
