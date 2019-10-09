@@ -79,5 +79,6 @@ func basic() {
 
 func main() {
 	// basic()
-	testPubSub()
+	// testPubSub()
+	testGRPC()
 }
