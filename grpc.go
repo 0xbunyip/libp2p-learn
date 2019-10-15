@@ -43,6 +43,7 @@ func runPublic() {
 
 	p := p2pgrpc.NewGRPCProtocol(ctx, host)
 	c := make(chan peer.ID, 10)
+	fmt.Println("Sleeping...")
 	setupServer(p, c)
 
 	for {
