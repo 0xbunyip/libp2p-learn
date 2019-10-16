@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"time"
 
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
@@ -22,6 +21,7 @@ func runRejector() {
 	host := setupHost(ctx)
 	// host.Mux().AddHandler(ProtocolName, handlerCloser)
 	host.SetStreamHandler(Protocol, handler)
+	host.Network().Notify(&notifiee{})
 	select {}
 }
 
@@ -75,12 +75,12 @@ func runConnector(maddr string) {
 		log.Fatal(err)
 	}
 
-	time.Sleep(1 * time.Second)
+	// time.Sleep(1 * time.Second)
 
-	_, err = s.Write([]byte("wow"))
-	if err != nil {
-		log.Fatal(err)
-	}
+	// _, err = s.Write([]byte("wow"))
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	log.Println(s)
 	select {}
@@ -92,4 +92,25 @@ func testRejectConn() {
 	} else {
 		runConnector(os.Args[2])
 	}
+}
+
+type notifiee struct{}
+
+func (no *notifiee) Listen(network.Network, multiaddr.Multiaddr) {
+	log.Println("in Listen")
+}
+func (no *notifiee) ListenClose(network.Network, multiaddr.Multiaddr) {
+	log.Println("in ListenClose")
+}
+func (no *notifiee) Connected(n network.Network, c network.Conn) {
+	log.Println("in Connected")
+}
+func (no *notifiee) Disconnected(network.Network, network.Conn) {
+	log.Println("in Disconnected")
+}
+func (no *notifiee) OpenedStream(network.Network, network.Stream) {
+	log.Println("in OpenedStream")
+}
+func (no *notifiee) ClosedStream(network.Network, network.Stream) {
+	log.Println("in ClosedStream")
 }
