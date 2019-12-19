@@ -77,7 +77,7 @@ func createHosts(n int) ([]host.Host, error) {
 		if err != nil {
 			return hosts, err
 		}
-		fmt.Printf("multiAddr %d: %v\n", i, multiAddrs[0])
+		log.Printf("multiAddr %d: %v\n", i, multiAddrs[0])
 	}
 	return hosts, nil
 }
