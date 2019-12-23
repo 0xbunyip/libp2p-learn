@@ -5,5 +5,6 @@ func main() {
 	// testPubSub()
 	// testGRPC()
 	// testRejectConn()
-	testConnected()
+	// testConnected()
+	testDisconnected()
 }

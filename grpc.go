@@ -9,13 +9,33 @@ import (
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/peer"
+	crypto "github.com/libp2p/go-libp2p-crypto"
 	"github.com/multiformats/go-multiaddr"
 	p2pgrpc "github.com/paralin/go-libp2p-grpc"
 	grpc "google.golang.org/grpc"
 )
 
-func setupHost(ctx context.Context) host.Host {
-	host, err := libp2p.New(ctx)
+func setupHost(ctx context.Context, privKeyStr string, port int) host.Host {
+	var privKey crypto.PrivKey
+	if len(privKeyStr) == 0 {
+		privKey, _, _ = crypto.GenerateKeyPair(crypto.ECDSA, 2048)
+		m, _ := crypto.MarshalPrivateKey(privKey)
+		encoded := crypto.ConfigEncodeKey(m)
+		fmt.Println("encoded libp2p key:", encoded)
+	} else {
+		b, _ := crypto.ConfigDecodeKey(privKeyStr)
+		privKey, _ = crypto.UnmarshalPrivateKey(b)
+	}
+
+	opts := []libp2p.Option{
+		libp2p.Identity(privKey),
+	}
+	if port > 0 {
+		addr, _ := multiaddr.NewMultiaddr(fmt.Sprintf("/ip4/%s/tcp/%d", "0.0.0.0", port))
+		opts = append(opts, libp2p.ListenAddrs(addr))
+	}
+
+	host, err := libp2p.New(ctx, opts...)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -39,7 +59,7 @@ func setupServer(p *p2pgrpc.GRPCProtocol, c chan peer.ID) {
 
 func runPublic() {
 	ctx := context.Background()
-	host := setupHost(ctx)
+	host := setupHost(ctx, "", 0)
 
 	p := p2pgrpc.NewGRPCProtocol(ctx, host)
 	c := make(chan peer.ID, 10)
@@ -73,7 +93,7 @@ func call(p *p2pgrpc.GRPCProtocol, destID, ourID peer.ID) {
 
 func runPrivate(maddr string) {
 	ctx := context.Background()
-	host := setupHost(ctx)
+	host := setupHost(ctx, "", 0)
 
 	// Run its own server
 	p := p2pgrpc.NewGRPCProtocol(ctx, host)

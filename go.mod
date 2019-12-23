@@ -10,6 +10,7 @@ require (
 	github.com/libp2p/go-libp2p v0.3.1
 	github.com/libp2p/go-libp2p-blankhost v0.1.3
 	github.com/libp2p/go-libp2p-core v0.2.2
+	github.com/libp2p/go-libp2p-crypto v0.1.0
 	github.com/libp2p/go-libp2p-host v0.1.0 // indirect
 	github.com/libp2p/go-libp2p-net v0.1.0 // indirect
 	github.com/libp2p/go-libp2p-protocol v0.1.0

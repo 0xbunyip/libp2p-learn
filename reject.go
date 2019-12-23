@@ -18,7 +18,7 @@ var Protocol = protocol.ID(ProtocolName)
 
 func runRejector() {
 	ctx := context.Background()
-	host := setupHost(ctx)
+	host := setupHost(ctx, "", 0)
 	// host.Mux().AddHandler(ProtocolName, handlerCloser)
 	host.SetStreamHandler(Protocol, handler)
 	host.Network().Notify(&notifiee{})
@@ -47,7 +47,7 @@ func handler(s network.Stream) {
 
 func runConnector(maddr string) {
 	ctx := context.Background()
-	host := setupHost(ctx)
+	host := setupHost(ctx, "", 0)
 
 	addr, err := multiaddr.NewMultiaddr(maddr)
 	if err != nil {

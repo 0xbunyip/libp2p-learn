@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	pubsub "github.com/0xbunyip/libp2p-learn/go-libp2p-pubsub"
@@ -47,7 +46,8 @@ func testPubSub() {
 		return
 	}
 
-	if err := publish(ps, hosts); err != nil {
+	data := []byte("xabc")
+	if err := publish(ps, data, 3, time.Second); err != nil {
 		log.Println(err)
 		return
 	}
@@ -122,7 +122,7 @@ func processSubscriptionMessage(i int, sub *pubsub.Subscription) {
 			log.Println(err)
 			continue
 		}
-		log.Printf("host[%d] received msg %s %v %v %v\n", i, msg.Data, msg.TopicIDs, msg.GetFrom(), msg.Seqno)
+		log.Printf("host[%d] received msg %v %v %v\n", i, msg.TopicIDs, msg.GetFrom(), msg.Seqno)
 	}
 }
 
@@ -143,16 +143,16 @@ func connectHosts(hosts []host.Host) error {
 	return nil
 }
 
-func publish(ps []*pubsub.PubSub, hosts []host.Host) error {
+func publish(ps []*pubsub.PubSub, data []byte, cnt int, delay time.Duration) error {
 	time.Sleep(1 * time.Second)
 	log.Println("Publishing hosts")
-	m := 3
-	for i := 0; i < m; i++ {
+	for i := 0; i < cnt; i++ {
 		log.Println("Publish ...")
-		if err := ps[0].Publish("art", []byte("abc"+strconv.Itoa(i))); err != nil {
+		data[0] = byte(i % 255)
+		if err := ps[0].Publish("art", data); err != nil {
 			log.Println(err)
 		}
-		time.Sleep(3 * time.Second)
+		time.Sleep(delay)
 	}
 	return nil
 }
