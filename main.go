@@ -6,5 +6,5 @@ func main() {
 	// testGRPC()
 	// testRejectConn()
 	// testConnected()
-	testDisconnected()
+	testCloseConn()
 }
