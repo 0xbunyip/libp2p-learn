@@ -7,6 +7,9 @@ import (
 	"os"
 	"time"
 
+	"net/http"
+	_ "net/http/pprof"
+
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/multiformats/go-multiaddr"
 	p2pgrpc "github.com/paralin/go-libp2p-grpc"
@@ -20,13 +23,14 @@ func runServer() {
 	p := p2pgrpc.NewGRPCProtocol(ctx, host)
 	fmt.Println("Sleeping...")
 	RegisterHelloServiceServer(p.GetGRPCServer(), &HelloServer2{})
-	select {}
+	fmt.Println(http.ListenAndServe("0.0.0.0:6060", nil))
 }
 
 func dialAndCall(p *p2pgrpc.GRPCProtocol, destID, ourID peer.ID) {
 	log.Println("calling", destID)
 	ctx := context.Background()
 	conn, err := p.Dial(ctx, destID, grpc.WithInsecure(), grpc.WithBlock())
+	defer conn.Close()
 	// No close
 	if err != nil {
 		log.Fatal("A", err)
